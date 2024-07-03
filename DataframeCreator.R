@@ -212,11 +212,12 @@ merge_fixations_iaoi2 <- function(data, max_time = 75) {
     
     # As the info about the event is in every line with this id we can simply use the first line of the event
     eventInfo <- data[match(eventId, data$eventIndex), c("eventType", "eventDuration")]
-    
+    print(eventInfo$eventType)
+    print(eventInfo$eventDuration)
     # Check if the event isn't a fixation and the duration is smaller than the limit
     if (!is.na(eventInfo$eventType) && (eventInfo$eventType != "fixation") && (eventInfo$eventDuration < max_time)) {
       # If this is the case we now need to check if we are actually between to fixations
-      
+      print('xx')
       # The previous and next event ids
       # Note: We can not simply use -1 and +1 of the id as we might have merged before this event which creates gaps in the event ids
       currentEventIdRow <- match(eventId, currentEventIds)
@@ -228,8 +229,6 @@ merge_fixations_iaoi2 <- function(data, max_time = 75) {
       
       # And the first line of the next event
       eventInfoNext <- data[match(nextEventId, data$eventIndex), c("eventType", "gazePointAOI_name")]
-      print(eventInfoPrevious$gazePointAOI_name)
-      print(eventInfoNext$gazePointAOI_name)
       # Check if we are between two fixations
       # Note: As we only merge fixations we ignore all other cases
       if (eventInfoPrevious$eventType == "fixation" && eventInfoNext$eventType == "fixation") {
@@ -261,7 +260,8 @@ merge_fixations_iaoi2 <- function(data, max_time = 75) {
           currentEventIds <- currentEventIds[currentEventIds != eventId & currentEventIds != nextEventId]
         }
       }
-    }
+    }      
+    print("xa")
   }
   
   return(data)
@@ -270,6 +270,7 @@ merge_fixations_iaoi2 <- function(data, max_time = 75) {
 for (x in 1:length(dateiliste)){
   daten_liste[[x]] <- daten_liste[[x]] %>% mutate( task = substr(dateiliste[x], 87, nchar(dateiliste[x]) -4 ))
   daten_liste[[x]] <- daten_liste[[x]] %>% mutate(probant = substr(dateiliste[x], 81, 85))
+  daten_liste[[x]] <- daten_liste[[x]] %>% mutate(gazePointAOI_name  = ifelse(is.na(gazePointAOI_name), 'No_Gaze', gazePointAOI_name))
   daten_liste[[x]]$gazeHasValue <- as.logical(tolower(daten_liste[[x]]$gazeHasValue))
   daten_liste[[x]]$gazePointAOIHit <- as.logical(tolower(daten_liste[[x]]$gazePointAOIHit))
   daten_liste[[x]]$Duration <- daten_liste[[x]]$eyeDataTimestamp - daten_liste[[x]]$eyeDataTimestamp[1]
@@ -284,8 +285,11 @@ for(x in 1:length(dateiliste)){
     df[[x]] <- df[[x]] %>%  filter(!row_number() %in% c(1))
   } 
 }
+
+
 flush.console()
 for (x in 1:length(df)){
+  print(x)
   df[[x]] <- gap_fill(df[[x]], max_gap_length = 75)
   df[[x]] <- noise_reduction(df[[x]], method = median, window_size = 3)
   df[[x]] <- classify_iaoi(df[[x]], min_fixation_duration = 100)
@@ -297,5 +301,4 @@ for (x in 1:length(df)){
   df[[x]] <- merge_fixations_ivt(df[[x]], max_time = 75, max_angle = 0.5)
   
 }
-
 
