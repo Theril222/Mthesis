@@ -174,19 +174,17 @@ calculate_AOI_fixation <- function(data) {
       }else if(substr(data$gazePointAOI_name[row],1,7) =='Arbeits'){
         nAoiAf <- nAoiAf + 1
       }else if(substr(data$gazePointAOI_name[row],1,6) == 'Anleit' && (data$task[1] == 'Steamboat' || data$task[1] == 'Dog' )){
-        nAoialf <- nAoialf +1
+        nAoiModell <- nAoiModell +1
       }
       data$AOIFCAF[row] <- nAoiAf
-      data$AOIFCAlF[row] <- nAoialf
       data$AOIFCModell[row] <- nAoiModell
-      data$AOIFCTotal[row] <- nAOItotal <- nAoiAf + nAoialf + nAoiModell
+      data$AOIFCTotal[row] <- nAOItotal <- nAoiAf + nAoiModell
 
       
     }else{
       data$AOIFCAF[row] <- nAoiAf
-      data$AOIFCAlF[row] <- nAoialf
       data$AOIFCModell[row] <- nAoiModell
-      data$AOIFCTotal[row] <- nAOItotal <- nAoiAf + nAoialf + nAoiModell
+      data$AOIFCTotal[row] <- nAOItotal <- nAoiAf + nAoiModell
     }
   }
   return(data)
@@ -635,3 +633,24 @@ for (x in 1:length(df)){
   df[[x]] <- calculate_AOI_fixation(df[[x]])
   df[[x]] <- calculate_classifications(df[[x]])
 }
+df2 <- data.frame()
+for (x in 1:length(df)){
+  # Get the row data
+  probant <- df[[x]][nrow(df[[x]]), 'probant']
+  task  <- df[[x]][nrow(df[[x]]), 'task']
+  duration <- df[[x]][nrow(df[[x]]), 'Duration']
+  AOIFCAF <- df[[x]][nrow(df[[x]]), 'AOIFCAF']
+  AOIFCModell <- df[[x]][nrow(df[[x]]), 'AOIFCModell']
+  AOIFCTotal <- df[[x]][nrow(df[[x]]), 'AOIFCTotal']
+  fixcount <- df[[x]][nrow(df[[x]]), 'fixcount']
+  gapcount <- df[[x]][nrow(df[[x]]), 'gapcount']
+  saccadecount <-df[[x]][nrow(df[[x]]), 'saccadecount']
+  # Populate the row
+  new.row <- data.frame(probant = probant, task = task, duration = duration, AOIFCAF = AOIFCAF, AOIFCModell = AOIFCModell, AOIFCTotal = AOIFCTotal, fixcount = fixcount, gapcount = gapcount, saccadecount = saccadecount )
+  
+  # Add the row
+  df2 <- rbind(df2, new.row)
+}
+
+
+
