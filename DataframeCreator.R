@@ -1,6 +1,11 @@
 library(dplyr)
 library(arett)
 library(lubridate)
+library(rpart)
+library(rpart.plot)
+library(caret)
+library(tidyverse)		 # for data manipulation
+
 options(digits.secs=6)
 # Pfad zum Verzeichnis, in dem sich Ihre CSV-Dateien befinden
 pfad <- "C:/Users/Kevin/OneDrive/Dokumente/R/Eye-Tracking-Daten/Alle"
@@ -11,6 +16,8 @@ dateiliste <- list.files(path = pfad, pattern = "*.csv", full.names = TRUE)
 
 # Jede Datei in der Liste importieren
 daten_liste <- lapply(dateiliste, function(x) read.csv(x, stringsAsFactors = FALSE))
+
+erweiterung <- read.csv2("C:/Users/Kevin/OneDrive/Dokumente/R/Eye-Tracking-Daten/Erweiterung_Tabelle.csv", dec=";")
 
 # Copyright (c) Sebastian Kapp.
 # Licensed under the MIT License.
@@ -652,5 +659,37 @@ for (x in 1:length(df)){
   df2 <- rbind(df2, new.row)
 }
 
+df3 <- left_join(df2, erweiterung, by = c('probant' = 'Teilnehmer', 'task' = 'Aufgabe'))
+df4 <- df3[,3:11]
 
+model2 <- rpart(outcome ~ ., data = train)
+prp(model2, extra = 1)
+
+summary(df4)
+dim(df4)
+df4$outcome = as.factor(df4$outcome)
+parts = createDataPartition(df4$duration, p = 0.8, list = F)
+train = df4[parts, ]
+test = df4[-parts, ]
+
+# specifying the CV technique which will be passed into the train() function later and number parameter is the "k" in K-fold cross validation
+train_control = trainControl(method = "cv", number = 5, search = "grid")
+
+## Customsing the tuning grid (ridge regression has alpha = 0)
+multi_classification_Tree_Grid =  expand.grid(maxdepth = c(1,3,5,7,9))
+
+set.seed(50)
+
+# training a Regression model while tuning parameters (Method = "rpart")
+model = train(outcome~., data = train, method = "rpart2", trControl = train_control, tuneGrid = multi_classification_Tree_Grid)
+
+# summarising the results
+print(model)
+
+
+#use model to make predictions on test data
+pred_y = predict(model, test)
+
+# confusion Matrix
+confusionMatrix(data = pred_y, test$outcome)
 
