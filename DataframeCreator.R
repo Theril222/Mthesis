@@ -5,6 +5,13 @@ library(rpart)
 library(rpart.plot)
 library(caret)
 library(tidyverse)		 # for data manipulation
+library(party)
+library(C50)
+library(randomForest)
+library(gbm)
+library("xgboost")  # the main algorithm
+library("archdata") # for the sample dataset
+library("Ckmeans.1d.dp") # for xgb.ggplot.importance
 
 options(digits.secs=6)
 # Pfad zum Verzeichnis, in dem sich Ihre CSV-Dateien befinden
@@ -668,7 +675,7 @@ prp(model2, extra = 1)
 summary(df4)
 dim(df4)
 df4$outcome = as.factor(df4$outcome)
-parts = createDataPartition(df4$duration, p = 0.8, list = F)
+parts = createDataPartition(df4$duration, p = 0.7, list = F)
 train = df4[parts, ]
 test = df4[-parts, ]
 
@@ -677,6 +684,7 @@ train_control = trainControl(method = "cv", number = 5, search = "grid")
 
 ## Customsing the tuning grid (ridge regression has alpha = 0)
 multi_classification_Tree_Grid =  expand.grid(maxdepth = c(1,3,5,7,9))
+
 
 set.seed(50)
 
@@ -689,7 +697,145 @@ print(model)
 
 #use model to make predictions on test data
 pred_y = predict(model, test)
-
+pred_x = predict(model2, test)
+print(pred_x)
+print(pred_y)
 # confusion Matrix
 confusionMatrix(data = pred_y, test$outcome)
+
+
+target = outcome ~ duration + AOIFCAF  + AOIFCModell  + AOIFCTotal + fixcount + gapcount + saccadecount  + Abgeschlossen 
+
+tree = rpart(target, data = train, method = "class")
+rpart.plot(tree)
+
+predictions = predict(tree, test)
+table(predict(tree, newdata = test), test$outcome)
+
+tree = ctree(outcome ~ ., data = train)
+plot(tree, main="Conditional Inference Tree for Cognitive Load")
+table(predict(tree, newdata=test), test$outcome)
+
+# build model
+tree = C5.0(outcome ~ ., data = train, trials=10)
+plot(tree)
+# make predictions
+table(predict(tree, newdata=test), test$outcome)
+
+
+
+tree_ms3 = rpart(target, train, control = rpart.control(minsplit = 3))
+tree_ms10 = rpart(target, train, control = rpart.control(minsplit = 10))
+tree_ms7 = rpart(target, train, control = rpart.control(minsplit = 7))
+
+par(mfcol = c(1, 2))
+rpart.plot(tree_ms3, main = "minsplit=3")
+text(tree_ms3, cex = 0.7)
+rpart.plot(tree_ms10, main = "minsplit=10")
+text(tree_ms10, cex = 0.7)
+
+rpart.plot(tree_ms7, main = "minsplit=7")
+text(tree_ms7, cex = 0.7)
+
+
+predict_test = predict(tree_ms7, test, type = "class")
+head(predict_test)
+print(predict_test)
+print(test$outcome)
+
+confusion_matrix = table(predict_test, t)
+confusion_matrix
+
+fit <- randomForest(outcome ~ ., train,ntree=500)
+summary(fit)
+predictedrf = predict(fit,test)
+
+t <- as.vector(test$outcome)
+t
+
+
+confusion_matrix = table(predictedrf, t)
+confusion_matrix
+
+fitControl <- trainControl(method = "cv", number = 10, #5folds
+                           )
+
+tune_Grid <-  expand.grid(interaction.depth = 2,
+                          n.trees = 500,
+                          shrinkage = 0.1,
+                          n.minobsinnode = 10)
+                    
+
+
+fit <- train(outcome ~ ., data = train,
+                                          method = "gbm",
+                                          trControl = fitControl,
+                                          verbose = FALSE,
+                                          tuneGrid = tune_Grid)
+predicted= predict(fit,test,type= "prob")[,2]
+
+print(predicted)
+
+testnum <- df4 
+testnum$outcome <- as.numeric(testnum$outcome)
+testnum <- testnum %>% mutate(outcome = outcome - 1)
+summary(testnum)
+
+train_index <- sample(1:nrow(testnum), nrow(testnum)*0.7)
+# Full data set
+data_variables <- as.matrix(testnum[,-9])
+data_label <- testnum[,"outcome"]
+data_matrix <- xgb.DMatrix(data = as.matrix(testnum), label = data_label)
+# split train data and make xgb.DMatrix
+train_data   <- data_variables[train_index,]
+train_label  <- data_label[train_index]
+train_matrix <- xgb.DMatrix(data = train_data, label = train_label)
+# split test data and make xgb.DMatrix
+test_data  <- data_variables[-train_index,]
+test_label <- data_label[-train_index]
+test_matrix <- xgb.DMatrix(data = test_data, label = test_label)
+
+numberOfClasses <- length(unique(testnum$outcome))
+xgb_params <- list("objective" = "multi:softprob",
+                   "eval_metric" = "mlogloss",
+                   "num_class" = numberOfClasses)
+nround    <- 5000 # number of XGBoost rounds
+cv.nfold  <- 9
+
+# Fit cv.nfold * cv.nround XGB models and save OOF predictions
+cv_model <- xgb.cv(params = xgb_params,
+                   data = train_matrix, 
+                   nrounds = nround,
+                   nfold = cv.nfold,
+                   verbose = FALSE,
+                   prediction = TRUE)
+
+
+OOF_prediction <- data.frame(cv_model$pred) %>%
+  mutate(max_prob = max.col(., ties.method = "last"),
+         label = train_label + 1)
+head(OOF_prediction)
+
+# confusion matrix
+confusionMatrix(factor(OOF_prediction$max_prob),
+                factor(OOF_prediction$label),
+                mode = "everything")
+
+
+bst_model <- xgb.train(params = xgb_params,
+                       data = train_matrix,
+                       nrounds = nround)
+
+# Predict hold-out test set
+test_pred <- predict(bst_model, newdata = test_matrix)
+test_prediction <- matrix(test_pred, nrow = numberOfClasses,
+                          ncol=length(test_pred)/numberOfClasses) %>%
+  t() %>%
+  data.frame() %>%
+  mutate(label = test_label + 1,
+         max_prob = max.col(., "last"))
+# confusion matrix of test set
+confusionMatrix(factor(test_prediction$max_prob),
+                factor(test_prediction$label),
+                mode = "everything")
 
