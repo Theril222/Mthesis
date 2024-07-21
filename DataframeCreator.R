@@ -680,9 +680,7 @@ t <- as.vector(test$outcome)
 t2 <- as.factor(t)
 
 Classes <- unique(test$outcome)
-print(Classes)
 
-print(t2)
 model2 <- rpart(outcome ~., data = train)
 prp(model2, extra = 1)
 
@@ -761,8 +759,8 @@ predictedrf = predict(fit,test)
 
 
 
-confusion_matrix = table(factor(predictedrf), factor(t))
-confusion_matrix
+confusionMatrix(factor(predictedrf), t2)
+
 
 # train a model using our training data
 model_gbm = gbm(outcome ~.,
