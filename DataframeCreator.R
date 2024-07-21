@@ -816,7 +816,7 @@ numberOfClasses <- length(unique(testnum$outcome))
 xgb_params <- list("objective" = "multi:softprob",
                    "eval_metric" = "mlogloss",
                    "num_class" = numberOfClasses)
-nround    <- 100 # number of XGBoost rounds
+nround    <- 500 # number of XGBoost rounds
 cv.nfold  <- 9
 
 # Fit cv.nfold * cv.nround XGB models and save OOF predictions
@@ -857,4 +857,5 @@ test_prediction <- matrix(test_pred, nrow = numberOfClasses,
 confusionMatrix(factor(test_prediction$max_prob),
                 factor(test_prediction$label),
                 mode = "everything")
+
 
