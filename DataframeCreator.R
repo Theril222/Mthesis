@@ -667,10 +667,8 @@ for (x in 1:length(df)){
 }
 
 df3 <- left_join(df2, erweiterung, by = c('probant' = 'Teilnehmer', 'task' = 'Aufgabe'))
-df4 <- df3[,3:11]
+df4 <- df3[,c('duration','AOIFCAF', 'AOIFCModell', 'AOIFCTotal', 'fixcount', 'Abgeschlossen', 'outcome')  ]
 
-model2 <- rpart(outcome ~ ., data = train)
-prp(model2, extra = 1)
 
 summary(df4)
 dim(df4)
@@ -678,6 +676,15 @@ df4$outcome = as.factor(df4$outcome)
 parts = createDataPartition(df4$duration, p = 0.7, list = F)
 train = df4[parts, ]
 test = df4[-parts, ]
+t <- as.vector(test$outcome)
+t2 <- as.factor(t)
+
+Classes <- unique(test$outcome)
+print(Classes)
+
+print(t2)
+model2 <- rpart(outcome ~., data = train)
+prp(model2, extra = 1)
 
 # specifying the CV technique which will be passed into the train() function later and number parameter is the "k" in K-fold cross validation
 train_control = trainControl(method = "cv", number = 5, search = "grid")
@@ -697,30 +704,33 @@ print(model)
 
 #use model to make predictions on test data
 pred_y = predict(model, test)
-pred_x = predict(model2, test)
-print(pred_x)
-print(pred_y)
+pred_x = predict(model2, test, type = 'class')
+
+mallo <- data.frame(value = test$outcome, pred_x)
+confusionMatrix(pred_x, t2)
+
+
 # confusion Matrix
-confusionMatrix(data = pred_y, test$outcome)
+confusionMatrix(data = pred_y, reference =t2)
 
-
-target = outcome ~ duration + AOIFCAF  + AOIFCModell  + AOIFCTotal + fixcount + gapcount + saccadecount  + Abgeschlossen 
+target = outcome ~ duration + AOIFCAF  + AOIFCModell  + AOIFCTotal + fixcount  + Abgeschlossen 
 
 tree = rpart(target, data = train, method = "class")
 rpart.plot(tree)
 
-predictions = predict(tree, test)
-table(predict(tree, newdata = test), test$outcome)
+predictions = predict(tree, test, type = 'class')
+
+confusionMatrix(factor(predictions), t2)
+
 
 tree = ctree(outcome ~ ., data = train)
 plot(tree, main="Conditional Inference Tree for Cognitive Load")
-table(predict(tree, newdata=test), test$outcome)
 
 # build model
 tree = C5.0(outcome ~ ., data = train, trials=10)
 plot(tree)
 # make predictions
-table(predict(tree, newdata=test), test$outcome)
+confusionMatrix(predict(tree, newdata=test, type = 'class'), t2)
 
 
 
@@ -728,55 +738,64 @@ tree_ms3 = rpart(target, train, control = rpart.control(minsplit = 3))
 tree_ms10 = rpart(target, train, control = rpart.control(minsplit = 10))
 tree_ms7 = rpart(target, train, control = rpart.control(minsplit = 7))
 
-par(mfcol = c(1, 2))
-rpart.plot(tree_ms3, main = "minsplit=3")
-text(tree_ms3, cex = 0.7)
-rpart.plot(tree_ms10, main = "minsplit=10")
-text(tree_ms10, cex = 0.7)
-
-rpart.plot(tree_ms7, main = "minsplit=7")
-text(tree_ms7, cex = 0.7)
 
 
-predict_test = predict(tree_ms7, test, type = "class")
-head(predict_test)
-print(predict_test)
-print(test$outcome)
 
-confusion_matrix = table(predict_test, t)
-confusion_matrix
+predict_test = predict(tree_ms3, test, type = "class")
+predict_test2 = predict(tree_ms7, test, type = "class")
+predict_test3 = predict(tree_ms10, test, type = "class")
+
+
+
+confusionMatrix(factor(predict_test), t2)
+confusionMatrix(factor(predict_test2), t2)
+confusionMatrix(factor(predict_test3), t2)
+
+
+
+
 
 fit <- randomForest(outcome ~ ., train,ntree=500)
 summary(fit)
 predictedrf = predict(fit,test)
 
-t <- as.vector(test$outcome)
-t
 
 
-confusion_matrix = table(predictedrf, t)
+confusion_matrix = table(factor(predictedrf), factor(t))
 confusion_matrix
 
-fitControl <- trainControl(method = "cv", number = 10, #5folds
-                           )
+# train a model using our training data
+model_gbm = gbm(outcome ~.,
+                data = train,
+                distribution = "multinomial",
+                cv.folds = 9,
+                shrinkage = .01,
+                n.minobsinnode = 10,
+                n.trees = 500)       # 500 tress to be built
 
-tune_Grid <-  expand.grid(interaction.depth = 2,
-                          n.trees = 500,
-                          shrinkage = 0.1,
-                          n.minobsinnode = 10)
-                    
+
+#use model to make predictions on test data
+pred_test = predict.gbm(object = model_gbm,
+                        newdata = test,
+                        n.trees = 500,           # 500 tress to be built
+                        type = "response")
 
 
-fit <- train(outcome ~ ., data = train,
-                                          method = "gbm",
-                                          trControl = fitControl,
-                                          verbose = FALSE,
-                                          tuneGrid = tune_Grid)
-predicted= predict(fit,test,type= "prob")[,2]
 
-print(predicted)
+# Give class names to the highest prediction value.
+class_names = colnames(pred_test)[apply(pred_test, 1, which.max)]
+result = data.frame(test$outcome, class_names)
 
-testnum <- df4 
+
+
+conf_mat = confusionMatrix(test$outcome, as.factor(class_names))
+print(conf_mat)
+
+
+
+testing <- df4[,c('duration','AOIFCAF', 'AOIFCModell', 'AOIFCTotal', 'fixcount', 'Abgeschlossen', 'outcome')  ]
+
+testnum <- df4[,c('duration','AOIFCAF', 'AOIFCModell', 'AOIFCTotal', 'fixcount', 'Abgeschlossen', 'outcome')  ] 
 testnum$outcome <- as.numeric(testnum$outcome)
 testnum <- testnum %>% mutate(outcome = outcome - 1)
 summary(testnum)
@@ -799,7 +818,7 @@ numberOfClasses <- length(unique(testnum$outcome))
 xgb_params <- list("objective" = "multi:softprob",
                    "eval_metric" = "mlogloss",
                    "num_class" = numberOfClasses)
-nround    <- 5000 # number of XGBoost rounds
+nround    <- 100 # number of XGBoost rounds
 cv.nfold  <- 9
 
 # Fit cv.nfold * cv.nround XGB models and save OOF predictions
@@ -825,6 +844,8 @@ confusionMatrix(factor(OOF_prediction$max_prob),
 bst_model <- xgb.train(params = xgb_params,
                        data = train_matrix,
                        nrounds = nround)
+
+
 
 # Predict hold-out test set
 test_pred <- predict(bst_model, newdata = test_matrix)
