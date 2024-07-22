@@ -12,6 +12,7 @@ library(gbm)
 library("xgboost")  # the main algorithm
 library("archdata") # for the sample dataset
 library("Ckmeans.1d.dp") # for xgb.ggplot.importance
+library(catboost)
 
 options(digits.secs=6)
 # Pfad zum Verzeichnis, in dem sich Ihre CSV-Dateien befinden
@@ -110,22 +111,22 @@ calculate_velocity2 <- function(data, window_length = 20) {
     # If the data is valid and we haven't reached enough valid data to fill the window size yet, increase the number of valid samples we have seen
     # Note: We also have to check for an existing gaze position as we can't guarantee that one exists!
     if (data$gazeHasValue[row] && nValidSamplesWindow < windowCount) {
- 
+      
       nValidSamplesWindow <- nValidSamplesWindow + 1
       
     } else if (!data$gazeHasValue[row]) {
       # If we don't have a value reset our counter
- 
+      
       nValidSamplesWindow <- 0
     }
-
+    
     # If we have enough valid samples up to this point calculate the velocity in the middle of the window
     if (nValidSamplesWindow >= windowCount) {
       # Limits of the current window
       upperRow <- row
       sampleRow <- upperRow - windowUpper
       lowerRow <- sampleRow - windowLower
-
+      
       # Get the head (eye) position from the sample row
       origin_x <- data$gazeOrigin_x[sampleRow]
       origin_y <- data$gazeOrigin_y[sampleRow]
@@ -167,9 +168,9 @@ calculate_velocity2 <- function(data, window_length = 20) {
       # We need the time in seconds instead of ms to get the correct velocity unit
       timeDeltaS <- timeDeltaMs / 1000
       # The velocity is now the angle over time
-
+      
       data$velocity[sampleRow] <- angleDeg / timeDeltaS
-
+      
     }
   }
   # Return the result
@@ -193,7 +194,7 @@ calculate_AOI_fixation <- function(data) {
       data$AOIFCAF[row] <- nAoiAf
       data$AOIFCModell[row] <- nAoiModell
       data$AOIFCTotal[row] <- nAOItotal <- nAoiAf + nAoiModell
-
+      
       
     }else{
       data$AOIFCAF[row] <- nAoiAf
@@ -211,18 +212,18 @@ calculate_classifications <- function(data) {
   
   for (row in 1:nrow(data)){
     
-      if(data$classification[row] == 'fixation'){
-        fixations <- fixations + 1
-      }else if(data$classification[row] == 'gap'){
-        gaps <- gaps + 1
-      }else if(data$classification[row] == 'saccade'){
-        saccades <- saccades +1
-      }
-      data$fixcount[row] <- fixations
-      data$gapcount[row] <- gaps
-      data$saccadecount[row] <- saccades
-      
+    if(data$classification[row] == 'fixation'){
+      fixations <- fixations + 1
+    }else if(data$classification[row] == 'gap'){
+      gaps <- gaps + 1
+    }else if(data$classification[row] == 'saccade'){
+      saccades <- saccades +1
     }
+    data$fixcount[row] <- fixations
+    data$gapcount[row] <- gaps
+    data$saccadecount[row] <- saccades
+    
+  }
   return(data)
 }
 
@@ -243,7 +244,7 @@ merge_fixations_ivt2 <- function(data, max_time = 75, max_angle = 0.5) {
     # As the info about the event is in every line with this id we can simply use the first line of the event
     eventInfo <- data[data$eventIndex == eventId, ]
     eventInfo <- eventInfo[1, ]
-
+    
     # Check if the event isn't a fixation and the duration is smaller than the limit
     if (!is.na(eventInfo$eventType) && (eventInfo$classification != "fixation") && (eventInfo$eventDuration < max_time)) {
       # If this is the case we now need to check if we are actually between to fixations
@@ -667,13 +668,15 @@ for (x in 1:length(df)){
 }
 
 df3 <- left_join(df2, erweiterung, by = c('probant' = 'Teilnehmer', 'task' = 'Aufgabe'))
+df3 <- df3[df3$task != 'Steamboat', ]
+df3 <- df3[df3$task != 'Dog', ]
 df4 <- df3[,c('duration','AOIFCAF', 'AOIFCModell', 'AOIFCTotal', 'fixcount','gapcount' ,'saccadecount', 'Abgeschlossen','outcome')  ]
 
 set.seed(123) #set seed for reproducibility
 summary(df4)
 dim(df4)
 df4$outcome = as.factor(df4$outcome)
-parts = createDataPartition(df4$duration, p = 0.7, list = F)
+parts = createDataPartition(df4$duration, p = 0.8, list = F)
 train = df4[parts, ]
 test = df4[-parts, ]
 t <- as.vector(test$outcome)
@@ -753,7 +756,7 @@ confusionMatrix(factor(predict_test3), t2)
 
 
 
-fit <- randomForest(outcome ~ ., train,ntree=500)
+fit <- randomForest(outcome ~ ., train,ntree=5000)
 summary(fit)
 predictedrf = predict(fit,test)
 
@@ -766,7 +769,7 @@ confusionMatrix(factor(predictedrf), t2)
 model_gbm = gbm(outcome ~.,
                 data = train,
                 distribution = "multinomial",
-                cv.folds = 3,
+                cv.folds = 1,
                 shrinkage = .01,
                 n.minobsinnode = 10,
                 n.trees = 500)       # 500 tress to be built
@@ -920,14 +923,14 @@ features <- X_train
 labels <- y_train
 train_pool <- catboost.load_pool(data = features, label = labels)
 
-model_cb <- catboost.train(train_pool,  NULL,
+model <- catboost.train(train_pool,  NULL,
                         params = list(loss_function = 'MultiClass',
-                                      iterations = 5000, metric_period=10, logging_level = 'Silent'))
+                                      iterations = 5000, metric_period=10))
 
 real_data <- X_test
 real_pool <- catboost.load_pool(real_data)
 
-prediction <- catboost.predict(model_cb, real_pool, prediction_type = 'Class' )
+prediction <- catboost.predict(model, real_pool, prediction_type = 'Class' )
 confusionMatrix(factor(prediction),
                 factor(y_test),
                 mode = "everything")
