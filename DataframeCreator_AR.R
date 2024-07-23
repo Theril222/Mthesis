@@ -945,7 +945,7 @@ train_pool <- catboost.load_pool(data = features, label = labels)
 
 model <- catboost.train(train_pool,  NULL,
                         params = list(loss_function = 'MultiClass',
-                                      iterations = 5000, metric_period=10))
+                                      iterations = 5000, metric_period=10, logging_level = 'Silent'))
 
 real_data <- X_test
 real_pool <- catboost.load_pool(real_data)
