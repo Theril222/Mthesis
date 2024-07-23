@@ -700,18 +700,18 @@ multi_classification_Tree_Grid =  expand.grid(maxdepth = c(1,3,5,7,9))
 # training a Regression model while tuning parameters (Method = "rpart")
 model = train(outcome~., data = train, method = "rpart2", trControl = train_control, tuneGrid = multi_classification_Tree_Grid)
 
-# summarising the results
-print(model)
 
 
 #use model to make predictions on test data
 pred_y = predict(model, test)
 pred_x = predict(model2, test, type = 'class')
 
-
+print('---------------------------------------------------------')
+print('Evaluation of decision tree with rpart:')
 confusionMatrix(pred_x, t2)
 
-
+print('---------------------------------------------------------')
+print('Evaluation of decision tree with rpart (Regression-Model):')
 # confusion Matrix
 confusionMatrix(data = pred_y, reference =t2)
 
@@ -722,6 +722,8 @@ rpart.plot(tree)
 
 predictions = predict(tree, test, type = 'class')
 
+print('---------------------------------------------------------')
+print('Evaluation of decision tree with rpart tuned variables:')
 confusionMatrix(factor(predictions), t2)
 
 
@@ -730,6 +732,9 @@ plot(tree, main="Conditional Inference Tree for Cognitive Load")
 
 # build model
 tree = C5.0(outcome ~ ., data = train, trials=10)
+
+print('---------------------------------------------------------')
+print('Evaluation of decision tree with c5.0:')
 # make predictions
 confusionMatrix(predict(tree, newdata=test, type = 'class'), t2)
 
@@ -743,25 +748,33 @@ tree_ms7 = rpart(target, train, control = rpart.control(minsplit = 7))
 
 
 predict_test = predict(tree_ms3, test, type = "class")
+
 predict_test2 = predict(tree_ms7, test, type = "class")
+
 predict_test3 = predict(tree_ms10, test, type = "class")
 
 
-
+print('---------------------------------------------------------')
+print('Evaluation of decision tree with rpart minsplit = 3:')
 confusionMatrix(factor(predict_test), t2)
+print('---------------------------------------------------------')
+print('Evaluation of decision tree with rpart minsplit = 7:')
 confusionMatrix(factor(predict_test2), t2)
+print('---------------------------------------------------------')
+print('Evaluation of decision tree with rpart minsplit = 10:')
 confusionMatrix(factor(predict_test3), t2)
 
 
 
 
 
-fit <- randomForest(outcome ~ ., train,ntree=5000)
+fit <- randomForest(outcome ~ ., train,ntree=500)
 summary(fit)
 predictedrf = predict(fit,test)
 
 
-
+print('---------------------------------------------------------')
+print('Evaluation of random Forest:')
 confusionMatrix(factor(predictedrf), t2)
 
 
@@ -789,6 +802,8 @@ result = data.frame(test$outcome, class_names)
 
 
 
+print('---------------------------------------------------------')
+print('Evaluation of GBM:')
 conf_mat = confusionMatrix(test$outcome, as.factor(class_names))
 print(conf_mat)
 
@@ -827,7 +842,8 @@ cv_model <- xgb.cv(params = xgb_params,
                    verbose = FALSE,
                    prediction = TRUE)
 
-
+print('---------------------------------------------------------')
+print('Evaluation of xgb train-parameters:')
 OOF_prediction <- data.frame(cv_model$pred) %>%
   mutate(max_prob = max.col(., ties.method = "last"),
          label = train_label + 1)
@@ -854,6 +870,8 @@ test_prediction <- matrix(test_pred, nrow = numberOfClasses,
   mutate(label = test_label + 1,
          max_prob = max.col(., "last"))
 # confusion matrix of test set
+print('---------------------------------------------------------')
+print('Evaluation of xgb test-parameters:')
 confusionMatrix(factor(test_prediction$max_prob),
                 factor(test_prediction$label),
                 mode = "everything")
@@ -913,6 +931,8 @@ xgb_preds$ActualClass <- levels(df4$outcome)[y_test + 1]
 
 
 
+print('---------------------------------------------------------')
+print('Evaluation of tuned xgb:')
 confusionMatrix(factor(xgb_preds$ActualClass), factor(xgb_preds$PredictedClass))
 cm <- confusionMatrix(factor(xgb_preds$ActualClass), factor(xgb_preds$PredictedClass))
 cfm <- as_tibble(cm$table)
@@ -931,6 +951,8 @@ real_data <- X_test
 real_pool <- catboost.load_pool(real_data)
 
 prediction <- catboost.predict(model, real_pool, prediction_type = 'Class' )
+print('---------------------------------------------------------')
+print('Evaluation of catboost:')
 confusionMatrix(factor(prediction),
                 factor(y_test),
                 mode = "everything")
