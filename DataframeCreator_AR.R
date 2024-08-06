@@ -957,3 +957,4 @@ confusionMatrix(factor(prediction),
                 factor(y_test),
                 mode = "everything")
 
+write.csv2(df4, file="Prediciton_Daten.csv")
