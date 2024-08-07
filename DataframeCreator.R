@@ -68,6 +68,7 @@ calculate_classifications <- function(data) {
   return(data)
 }
 
+
 merge_fixations_ivt2 <- function(data, max_time = 75, max_angle = 0.5) {
   # Get all event ids and remove all missing ids
   allEventIds <- unique(data$eventIndex)
@@ -372,6 +373,7 @@ classify_idt2 <- function(data, dispersion_threshold = 1.6, time_window = 250) {
         # Calculate the angle between the two vectors using the scalar product and their lengths (result in rad)
         idt_angleRad <- acos(idt_scalar / (idt_iVector_length * idt_jVector_length))
         
+        #Rounding error
         if((idt_scalar / (idt_iVector_length * idt_jVector_length)) > 1 && (idt_scalar / (idt_iVector_length * idt_jVector_length)) < 1.001 ){
           idt_angleRad <- 0
         }
@@ -454,6 +456,46 @@ classify_idt2 <- function(data, dispersion_threshold = 1.6, time_window = 250) {
   return(data)
 }
 
+
+discard_short_fixations2 <- function(data, min_duration = 60, reclassify_saccade = FALSE) {
+  # Get all event ids and remove all missing ids
+  allEventIds <- unique(data$eventIndex)
+  allEventIds <- allEventIds[!is.na(allEventIds)]
+  
+  # We go through all events using the event ids and if the event is a fixation check for the duration of the event
+  for (eventId in allEventIds) {
+    # As the info about the event is in every line with this id we can simply use the first line of the id
+    eventInfo <- data[data$eventIndex == eventId, ]
+    eventInfo <- eventInfo[1, ]
+    # Next Iteration through we will run a error with NAs
+    if(is.na(eventInfo$eventType) ){
+      next
+    }
+    # Check if we are in a fixation and if the duration of the fixation is smaller than the limit
+    if (eventInfo$eventType == "fixation" && eventInfo$eventDuration < min_duration) {
+      # If this is the case we want to discard the fixation
+      
+      # Change the classification based on whether we want it to become a saccade or a gap
+      if (reclassify_saccade) {
+        data$eventType[data$eventIndex == eventId] <- "saccade"
+      } else {
+        data$eventType[data$eventIndex == eventId] <- "gap"
+      }
+      
+      # Remove the fixation information of the event
+      data$fixation_x[data$eventIndex == eventId] <- NA
+      data$fixation_y[data$eventIndex == eventId] <- NA
+      data$fixation_z[data$eventIndex == eventId] <- NA
+    }
+  }
+  
+  # Return the result
+  return(data)
+}
+
+
+
+
 #Loop through Data cleansing
 
 for (x in 1:length(dateiliste)){
@@ -497,6 +539,7 @@ for (x in 1:length(df)){
   df[[x]] <- merge_fixations_iaoi(df[[x]], max_time = 75)
   df[[x]] <- merge_fixations_idt( df[[x]], max_time = 75, dispersion_threshold = 1.6)
   df[[x]] <- merge_fixations_ivt2(df[[x]], max_time = 75, max_angle = 0.5)
+  df[[x]] <- discard_short_fixations2(df[[x]], min_duration = 60, reclassify_saccade = FALSE)
   df[[x]] <- calculate_AOI_fixation(df[[x]])
   df[[x]] <- calculate_classifications(df[[x]])
 }
@@ -536,5 +579,5 @@ t <- as.vector(test$outcome)
 t2 <- as.factor(t)
 
 
-
+print(unique(df[[1]]$eventIndex))
 
