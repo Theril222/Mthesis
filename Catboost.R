@@ -1,5 +1,6 @@
 library(catboost)
 library(caret)
+library(ggplot2)
 
 
 
@@ -88,6 +89,30 @@ print(best_params)
 
 # Train final model
 final_model <- catboost.train(train_pool, params = best_params)
+
+
+feature_importance <- catboost.get_feature_importance(model,
+                                pool = train_pool,
+                                type = 'FeatureImportance',
+                                thread_count = -1)
+
+# Create plotting data frame
+importance <- data.frame(
+  Feature = colnames(train_data3),
+  Importance = feature_importance
+)
+
+# Sort by importance
+importance <- importance_df[order(-importance_df$Importance), ]
+
+
+# Plot 
+ggplot(importance, aes(x = reorder(Feature, Importance), y = Importance)) +
+  geom_bar(stat = 'identity') +
+  coord_flip() +
+  labs(title = 'Feature Importance',
+       x = 'Feature',
+       y = 'Importance')
 
 # Prediction
 final_predictions <- catboost.predict(final_model, test_pool, prediction_type = 'Class')
