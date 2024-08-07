@@ -6,167 +6,17 @@ library(tidyverse)		 # for data manipulation
 
 
 options(digits.secs=6)
-# Pfad zum Verzeichnis, in dem sich Ihre CSV-Dateien befinden
+# Path to the Directory of the CSV Files
 pfad <- "C:/Users/Kevin/OneDrive/Dokumente/R/Eye-Tracking-Daten/Alle"
 
-# Liste aller .csv-Dateien im Verzeichnis erhalten
+# List of all CSV Files in the Directory
 dateiliste <- list.files(path = pfad, pattern = "*.csv", full.names = TRUE)
 
 
-# Jede Datei in der Liste importieren
+# Import every File in the list
 daten_liste <- lapply(dateiliste, function(x) read.csv(x, stringsAsFactors = FALSE))
 
 erweiterung <- read.csv2("C:/Users/Kevin/OneDrive/Dokumente/R/Eye-Tracking-Daten/Erweiterung_Tabelle.csv", dec=";")
-
-# Copyright (c) Sebastian Kapp.
-# Licensed under the MIT License.
-
-#' Calculate Velocity
-#'
-#' @description
-#' Calculate the velocity of each gaze point (results required for I-VT fixation filter)
-#'
-#' @details
-#' This is an implementation of the velocity calculation as documented in the \href{https://www.tobiipro.com/siteassets/tobii-pro/learn-and-support/analyze/how-do-we-classify-eye-movements/tobii-pro-i-vt-fixation-filter.pdf}{Tobii Pro I-VT fixation filter}.
-#' It first calculates the window size (number of data points) over which the velocity should be calculated based on the specified window length (in ms)
-#' and the average time between data points of the first 100 samples. This accommodates data logs with non-uniform time between data points.
-#' Then it calculates the velocity for each gaze point by calculating the angle between the first and last gaze point in the current window
-#' with the origin of the gaze point in the middle of the window. This angle divided by the window length is saved as the velocity of the middle gaze point.
-#'
-#' The default window length of 20ms and the eye tracker rate of the Microsoft HoloLens 2 of 30Hz results in a window size of two and therefore a
-#' calculation of the velocity between the previous and current gaze point.
-#'
-#' @format Input data frame columns
-#' \describe{
-#'   \item{gazeHasValue}{Logical (boolean) if there is valid gaze data}
-#'   \item{eyeDataRelativeTimestamp}{Timestamp of the data}
-#'   \item{gazeorigin_x}{X coordinates of the gaze origin}
-#'   \item{gazeorigin_y}{Y coordinates of the gaze origin}
-#'   \item{gazeorigin_z}{Z coordinates of the gaze origin}
-#'   \item{gazePoint_x}{X coordinates of the gaze point}
-#'   \item{gazePoint_y}{Y coordinates of the gaze point}
-#'   \item{gazePoint_z}{Z coordinates of the gaze point}
-#' }
-#'
-#'
-#' @param data Data frame of the eye tracking data we want to process
-#' @param window_length Length of the window over which we want to calculate the velocity
-#' @return The input data frame with the additional column \emph{velocity}
-#'
-#' @export
-calculate_velocity2 <- function(data, window_length = 20) {
-  # Calculate how many samples are to be analyzed using the window length in ms ----
-  
-  # Make sure we have 100 rows which we can analyze, if not analyze all available rows
-  maxRow <- 100
-  if (nrow(data) < 100) maxRow <- nrow(data)
-  
-  # Go through the first 100 samples (or less) to find the average time between samples
-  sampleTime <- 0
-  for (row in 2:maxRow) {
-    sampleTime <- sampleTime + (data$eyeDataRelativeTimestamp[row] - data$eyeDataRelativeTimestamp[row-1])
-  }
-  sampleTime <- sampleTime / maxRow
-  
-  # Divide the velocity window by this sample time to get the number of samples we will analyze
-  windowCount <- sampleTime / window_length
-  # Add 1 and then round down to get final window size
-  windowCount <- floor(windowCount + 1)
-  # Small cleanup
-  rm(maxRow, row, sampleTime)
-  
-  
-  # calculate window borders ----
-  
-  windowLower <- 0
-  windowUpper <- 0
-  
-  if (windowCount %% 2 != 0) {
-    # If the window count is odd, we can simply subtract one and divide by two to get the offset for the lower and upper limit for the window
-    windowUpper <- (windowCount - 1) / 2
-    windowLower <- windowUpper
-  } else {
-    # Otherwise the lower limit is half of the window and the upper limit is one less than the lower limit
-    windowLower <- windowCount / 2
-    windowUpper <- windowLower - 1
-  }
-  
-  # Calculate velocities ----
-  
-  # How many valid samples did we get so far?
-  nValidSamplesWindow <- 0
-  data['velocity'] = NaN
-  
-  # We now go through all gaze points and calculate the velocities.
-  for (row in 1:nrow(data)) {
-    # If the data is valid and we haven't reached enough valid data to fill the window size yet, increase the number of valid samples we have seen
-    # Note: We also have to check for an existing gaze position as we can't guarantee that one exists!
-    if (data$gazeHasValue[row] && nValidSamplesWindow < windowCount) {
- 
-      nValidSamplesWindow <- nValidSamplesWindow + 1
-      
-    } else if (!data$gazeHasValue[row]) {
-      # If we don't have a value reset our counter
- 
-      nValidSamplesWindow <- 0
-    }
-
-    # If we have enough valid samples up to this point calculate the velocity in the middle of the window
-    if (nValidSamplesWindow >= windowCount) {
-      # Limits of the current window
-      upperRow <- row
-      sampleRow <- upperRow - windowUpper
-      lowerRow <- sampleRow - windowLower
-
-      # Get the head (eye) position from the sample row
-      origin_x <- data$gazeOrigin_x[sampleRow]
-      origin_y <- data$gazeOrigin_y[sampleRow]
-      origin_z <- data$gazeOrigin_z[sampleRow]
-      
-      # Get the gaze position at the lower end of the window
-      lowerGaze_x <- data$gazePoint_x[lowerRow]
-      lowerGaze_y <- data$gazePoint_y[lowerRow]
-      lowerGaze_z <- data$gazePoint_z[lowerRow]
-      
-      # Get the gaze position at the upper end of the window
-      upperGaze_x <- data$gazePoint_x[upperRow]
-      upperGaze_y <- data$gazePoint_y[upperRow]
-      upperGaze_z <- data$gazePoint_z[upperRow]
-      
-      # Calculate the direction of the gaze in form of the vector between the head and gaze position
-      lowerDirection_x <- data$gazeOrigin_x[sampleRow] - data$gazePoint_x[lowerRow]
-      lowerDirection_y <- data$gazeOrigin_y[sampleRow] - data$gazePoint_y[lowerRow]
-      lowerDirection_z <- data$gazeOrigin_z[sampleRow] - data$gazePoint_z[lowerRow]
-      upperDirection_x <- data$gazeOrigin_x[sampleRow] - data$gazePoint_x[upperRow]
-      upperDirection_y <- data$gazeOrigin_y[sampleRow] - data$gazePoint_y[upperRow]
-      upperDirection_z <- data$gazeOrigin_z[sampleRow] - data$gazePoint_z[upperRow]
-      
-      
-      # Calculate the scalar product of the two vectors
-      scalar <- lowerDirection_x * upperDirection_x + lowerDirection_y * upperDirection_y + lowerDirection_z * upperDirection_z
-      # Calculate the length of the two vectors
-      lowerDirection_length <- sqrt(lowerDirection_x * lowerDirection_x + lowerDirection_y * lowerDirection_y + lowerDirection_z * lowerDirection_z)
-      upperDirection_length <- sqrt(upperDirection_x * upperDirection_x + upperDirection_y * upperDirection_y + upperDirection_z * upperDirection_z)
-      
-      # Calculate the angle between the two vectors using the scalar product and their lengths (result in rad)
-      angleRad <- acos(scalar / (lowerDirection_length * upperDirection_length))
-      # The final angle is supposed to be in degrees instead of rad, therefore we translate the value
-      angleDeg <- (angleRad * 180) / pi
-      
-      # The time delta is the time between the upper and lower window
-      timeDeltaMs <- data$eyeDataRelativeTimestamp[upperRow] - data$eyeDataRelativeTimestamp[lowerRow]
-      
-      # We need the time in seconds instead of ms to get the correct velocity unit
-      timeDeltaS <- timeDeltaMs / 1000
-      # The velocity is now the angle over time
-
-      data$velocity[sampleRow] <- angleDeg / timeDeltaS
-
-    }
-  }
-  # Return the result
-  return(data)
-}
 
 
 calculate_AOI_fixation <- function(data) {
@@ -604,19 +454,30 @@ classify_idt2 <- function(data, dispersion_threshold = 1.6, time_window = 250) {
   return(data)
 }
 
+#Loop through Data cleansing
+
 for (x in 1:length(dateiliste)){
+  # Create Column velocity for calculate_velocity function 
+  daten_liste[[x]] <- daten_liste[[x]] %>% mutate( velocity = NaN )
+  #Create column task with the name of the task in each row
   daten_liste[[x]] <- daten_liste[[x]] %>% mutate( task = substr(dateiliste[x], 87, nchar(dateiliste[x]) -4 ))
+  #create column probant with codename of the participant in each row
   daten_liste[[x]] <- daten_liste[[x]] %>% mutate(probant = substr(dateiliste[x], 81, 85))
+  #Delete na out of the rows of gazePointAoit_name
   daten_liste[[x]] <- daten_liste[[x]] %>% mutate(gazePointAOI_name  = ifelse(is.na(gazePointAOI_name), 'No_Gaze', gazePointAOI_name))
+  #Set gazeHasValue as logical
   daten_liste[[x]]$gazeHasValue <- as.logical(tolower(daten_liste[[x]]$gazeHasValue))
+  #set gazePointAOIHIT as logical
   daten_liste[[x]]$gazePointAOIHit <- as.logical(tolower(daten_liste[[x]]$gazePointAOIHit))
+  #Calculate the duration of the experiment for each row
   daten_liste[[x]]$Duration <- daten_liste[[x]]$eyeDataTimestamp - daten_liste[[x]]$eyeDataTimestamp[1]
-  daten_liste[[x]]$eyeDataTimestamp <- as.POSIXct(daten_liste[[x]]$eyeDataTimestamp / 1000, origin="1970-01-01")
+
 }
 
-#df
+#Save in another variable
 df <- daten_liste
 
+#Delete first row if gazeHasValue is FALSE
 for(x in 1:length(dateiliste)){
   while(df[[x]]$gazeHasValue[1] == FALSE) {
     df[[x]] <- df[[x]] %>%  filter(!row_number() %in% c(1))
@@ -624,12 +485,12 @@ for(x in 1:length(dateiliste)){
 }
 
 
-flush.console()
+#prepare data for 
 for (x in 1:length(df)){
   print(x)
   df[[x]] <- gap_fill(df[[x]], max_gap_length = 75)
   df[[x]] <- noise_reduction(df[[x]], method = median, window_size = 3)
-  df[[x]] <- calculate_velocity2(df[[x]], window_length = 20)
+  df[[x]] <- calculate_velocity(df[[x]], window_length = 20)
   df[[x]] <- classify_iaoi(df[[x]], min_fixation_duration = 100)
   df[[x]] <- classify_ivt(df[[x]], velocity_threshold = 100)
   df[[x]] <- classify_idt2(df[[x]], dispersion_threshold = 1.6, time_window = 250)
@@ -639,7 +500,9 @@ for (x in 1:length(df)){
   df[[x]] <- calculate_AOI_fixation(df[[x]])
   df[[x]] <- calculate_classifications(df[[x]])
 }
+
 df2 <- data.frame()
+
 for (x in 1:length(df)){
   # Get the row data
   probant <- df[[x]][nrow(df[[x]]), 'probant']
@@ -662,9 +525,10 @@ df3 <- left_join(df2, erweiterung, by = c('probant' = 'Teilnehmer', 'task' = 'Au
 df4 <- df3[,c('duration','AOIFCAF', 'AOIFCModell', 'AOIFCTotal', 'fixcount','gapcount' ,'saccadecount', 'Abgeschlossen','outcome')  ]
 
 set.seed(123) #set seed for reproducibility
-summary(df4)
-dim(df4)
+
+#Set outcome as factor
 df4$outcome = as.factor(df4$outcome)
+#Split Data in Test and Trainingsdata
 parts = createDataPartition(df4$duration, p = 0.7, list = F)
 train = df4[parts, ]
 test = df4[-parts, ]
