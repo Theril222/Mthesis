@@ -1,5 +1,3 @@
-library(dplyr)
-library(lubridate)
 library(caret)
 library(randomForest)
 
@@ -11,7 +9,7 @@ train_control3 <- trainControl(method = "cv", number = 5) # 5-fold cross-validat
 
 
 # Define a grid of hyperparameters
-tune_grid3 <- expand.grid(mtry = c(2, 3, 4)) # Number of variables randomly sampled as candidates at each split
+tune_grid3 <- expand.grid(mtry = c(2, 3, 4, 5, 6)) # Number of variables randomly sampled as candidates at each split
 
 # Train the model with cross-validation
 rf_model <- train(outcome ~ ., data = train, method = "rf",

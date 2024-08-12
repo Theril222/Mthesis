@@ -1,5 +1,3 @@
-library(dplyr)
-library(e1071)
 library(rpart)
 library(rpart.plot)
 library(caret)
@@ -7,12 +5,12 @@ library(C50)
 
 
 
-set.seed(124)
+set.seed(121)
 # CV
 train_control = trainControl(method = "cv", number = 5, search = "grid")
 
 ## Tuning Grid Customizition
-multi_classification_Tree_Grid =  expand.grid(maxdepth = c(1,3,5,7,9))
+multi_classification_Tree_Grid =  expand.grid(maxdepth = c(3,5,9))
 
 
 
@@ -34,7 +32,7 @@ confusionMatrix(data = factor(pred_y), reference =t2)
 #C50
 
 
-set.seed(125)
+set.seed(120)
 tune_grid <- expand.grid(trials = c(1, 5, 10),          # Number of boosting iterations
                          model = c("tree"),   # DT
                          winnow = c(TRUE, FALSE))      # Attribute winnowing
@@ -53,7 +51,7 @@ c5_model <- train(outcome ~ ., data = train, method = "C5.0",
 # Show the best parameter
 print(c5_model$bestTune)
 
-tree <- C5.0(outcome~., data = train, model = 'tree', winnow = TRUE, trials = 5)
+tree <- C5.0(outcome~., data = train, model = 'tree', winnow = FALSE, trials = 1)
 
 plot(tree)
 predictions <- predict(tree, newdata = test)

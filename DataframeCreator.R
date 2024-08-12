@@ -21,7 +21,6 @@ erweiterung <- read.csv2("C:/Users/Kevin/OneDrive/Dokumente/R/Eye-Tracking-Daten
 
 calculate_AOI_fixation <- function(data) {
   nAoiAf <- 0
-  nAoialf <- 0
   nAoiModell <- 0
   for (row in 1:nrow(data)){
     if(data$gazeHasValue[row] && data$gazePointAOIHit[row] == TRUE && data$classification[row] == 'fixation'){
@@ -287,7 +286,7 @@ classify_idt2 <- function(data, dispersion_threshold = 1.6, time_window = 250) {
         idt_angleRad <- acos(idt_scalar / (idt_iVector_length * idt_jVector_length))
         
         if((idt_scalar / (idt_iVector_length * idt_jVector_length)) > 1 && (idt_scalar / (idt_iVector_length * idt_jVector_length)) < 1.001 ){
-          idt_angleRad <- 0
+          idt_angleRad <- 1
         }
         
         # The final angle is supposed to be in degrees instead of rad, therefore we translate the value
@@ -531,7 +530,6 @@ for(x in 1:length(dateiliste)){
 for (x in 1:length(df)){
   print(x)
   df[[x]] <- gap_fill(df[[x]], max_gap_length = 75)
-  df[[x]] <- noise_reduction(df[[x]], method = median, window_size = 3)
   df[[x]] <- calculate_velocity(df[[x]], window_length = 20)
   df[[x]] <- classify_iaoi(df[[x]], min_fixation_duration = 100)
   df[[x]] <- classify_ivt(df[[x]], velocity_threshold = 100)
@@ -567,7 +565,7 @@ for (x in 1:length(df)){
 df3 <- left_join(df2, erweiterung, by = c('probant' = 'Teilnehmer', 'task' = 'Aufgabe'))
 df4 <- df3[,c('duration','AOIFCAF', 'AOIFCModell', 'AOIFCTotal', 'fixcount','gapcount' ,'saccadecount', 'Abgeschlossen','outcome')  ]
 
-set.seed(123) #set seed for reproducibility
+set.seed(110) #set seed for reproducibility
 
 #Set outcome as factor
 df4$outcome = as.factor(df4$outcome)
@@ -577,7 +575,3 @@ train = df4[parts, ]
 test = df4[-parts, ]
 t <- as.vector(test$outcome)
 t2 <- as.factor(t)
-
-
-print(unique(df[[1]]$eventIndex))
-

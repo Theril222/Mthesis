@@ -1,15 +1,15 @@
 library(catboost)
-library(caret)
 library(ggplot2)
+library(caret)
 
 
 
 label2 <- as.factor(testnum$outcome)
 numeric <- as.numeric(label2) - 1
-data_matrix2 <- as.matrix(testnum[,1:6])
+data_matrix2 <- as.matrix(testnum[,1:8])
 
 # Test and Training Data
-set.seed(129)
+set.seed(131)
 trainIndex <- createDataPartition(label, p = 0.7, list = FALSE)
 train_data3 <- data_matrix2[trainIndex, ]
 train_label3 <- numeric[trainIndex]
@@ -24,7 +24,7 @@ test_pool <- catboost.load_pool(data = test_data3, label = test_label3)
 # Parameter grid 
 param_grid <- list(
   learning_rate = c(0.01, 0.1, 0.3),
-  depth = c(3, 6, 9),
+  depth = c(3, 5, 9),
   iterations = c(50, 100, 150),
   l2_leaf_reg = c(1, 3, 5),
   border_count = c(32, 64),
@@ -64,10 +64,10 @@ for (learning_rate in param_grid$learning_rate) {
             model <- catboost.train(train_pool, params = params)
             
             # Make predictions
-            predictions <- catboost.predict(model, test_pool, prediction_type = 'Class')
+            predictions <- catboost.predict(model, train_pool, prediction_type = 'Class')
             
             # Calculate accuracy
-            accuracy <- mean(predictions == test_label3)
+            accuracy <- mean(predictions == train_label3)
             
             # Best score so far
             if (accuracy > best_score) {
@@ -92,9 +92,9 @@ final_model <- catboost.train(train_pool, params = best_params)
 
 
 feature_importance <- catboost.get_feature_importance(model,
-                                pool = train_pool,
-                                type = 'FeatureImportance',
-                                thread_count = -1)
+                                                      pool = train_pool,
+                                                      type = 'FeatureImportance',
+                                                      thread_count = -1)
 
 # Create plotting data frame
 importance <- data.frame(
@@ -103,7 +103,7 @@ importance <- data.frame(
 )
 
 # Sort by importance
-importance <- importance_df[order(-importance_df$Importance), ]
+importance <- importance[order(-importance$Importance), ]
 
 
 # Plot 
