@@ -35,4 +35,11 @@ summary(gbm_model, plotit = TRUE)
 predictions <- predict(gbm_model, newdata = test)
 
 # Evaluate model accuracy
-confusionMatrix(predictions, t2)
+conf_matrix4 <- confusionMatrix(predictions, t2)
+print(conf_matrix4)
+
+
+# Extract F1-score
+f1_score4 <- conf_matrix4$byClass[,'F1']
+print(f1_score4)
+

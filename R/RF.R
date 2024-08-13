@@ -35,4 +35,10 @@ varImpPlot(best_rf_model)
 predictions <- predict(rf_model, newdata = test)
 
 # Evaluate accuracy
-confusionMatrix(predictions, t2)
+conf_matrix3 <- confusionMatrix(predictions, t2)
+print(conf_matrix3)
+
+
+# Extract F1-score
+f1_score3 <- conf_matrix3$byClass[,'F1']
+print(f1_score3)

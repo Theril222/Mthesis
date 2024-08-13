@@ -123,5 +123,9 @@ final_predictions_class <- as.factor(final_predictions)
 
 
 # Evaluate accuracy
-conf_matrix <- confusionMatrix(final_predictions_class, as.factor(test_label3))
-print(conf_matrix)
+conf_matrix6 <- confusionMatrix(final_predictions_class, as.factor(test_label3))
+print(conf_matrix6)
+
+# Extract F1-score
+f1_score6 <- conf_matrix6$byClass[,'F1']
+print(f1_score6)

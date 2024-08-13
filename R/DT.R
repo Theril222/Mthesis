@@ -26,8 +26,12 @@ pred_y = predict(model2, test, type = 'class')
 
 
 # Evaluate accuracy
-confusionMatrix(data = factor(pred_y), reference =t2)
+conf_matrix <- confusionMatrix(data = factor(pred_y), reference =t2)
+print(conf_matrix)
 
+# Extract F1-score
+f1_score <- conf_matrix$byClass[,'F1']
+print(f1_score)
 
 #C50
 
@@ -57,7 +61,13 @@ plot(tree)
 predictions <- predict(tree, newdata = test)
 
 # Evaluate accuracy
-confusionMatrix(predictions, t2)
+conf_matrix2 <- confusionMatrix(predictions, t2)
+print(conf_matrix2)
+
+
+# Extract F1-score
+f1_score2 <- conf_matrix2$byClass[,'F1']
+print(f1_score2)
 
 
 
