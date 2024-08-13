@@ -1,0 +1,264 @@
+fileFormatVersion: 2
+guid: 48b748a1c4099b74d947c5b31a5a902e
+ModelImporter:
+  serializedVersion: 22
+  fileIDToRecycleName:
+    100000: //RootNode
+    100002: Round Brick 1x1.300
+    100004: Round Brick 1x1.301
+    100006: Round Brick 1x1.302
+    100008: Round Brick 1x1.303
+    100010: Round Brick 1x1.304
+    100012: Round Brick 1x1.305
+    100014: Round Brick 1x1.306
+    100016: Round Brick 1x1.307
+    100018: Round Brick 1x1.308
+    100020: Round Brick 1x1.309
+    100022: Round Brick 1x1.310
+    100024: Round Brick 1x1.311
+    100026: Round Brick 1x1.312
+    100028: Round Brick 1x1.313
+    100030: Round Brick 1x1.314
+    100032: Round Brick 1x1.315
+    100034: Round Brick 1x1.316
+    100036: Round Brick 1x1.317
+    100038: Round Brick 1x1.318
+    100040: Round Brick 1x1.319
+    100042: Round Brick 1x1.320
+    100044: Round Brick 1x1.321
+    100046: Round Brick 1x1.322
+    100048: Round Brick 1x1.323
+    100050: Round Brick 1x1.324
+    100052: Round Brick 1x1.325
+    100054: Round Brick 1x1.326
+    100056: Round Brick 1x1.327
+    100058: Round Brick 1x1.328
+    100060: Round Brick 1x1.329
+    100062: Round Brick 1x1.330
+    100064: Round Brick 1x1.331
+    100066: Round Brick 1x1.332
+    100068: Round Brick 1x1.333
+    100070: Round Brick 1x1.334
+    400000: //RootNode
+    400002: Round Brick 1x1.300
+    400004: Round Brick 1x1.301
+    400006: Round Brick 1x1.302
+    400008: Round Brick 1x1.303
+    400010: Round Brick 1x1.304
+    400012: Round Brick 1x1.305
+    400014: Round Brick 1x1.306
+    400016: Round Brick 1x1.307
+    400018: Round Brick 1x1.308
+    400020: Round Brick 1x1.309
+    400022: Round Brick 1x1.310
+    400024: Round Brick 1x1.311
+    400026: Round Brick 1x1.312
+    400028: Round Brick 1x1.313
+    400030: Round Brick 1x1.314
+    400032: Round Brick 1x1.315
+    400034: Round Brick 1x1.316
+    400036: Round Brick 1x1.317
+    400038: Round Brick 1x1.318
+    400040: Round Brick 1x1.319
+    400042: Round Brick 1x1.320
+    400044: Round Brick 1x1.321
+    400046: Round Brick 1x1.322
+    400048: Round Brick 1x1.323
+    400050: Round Brick 1x1.324
+    400052: Round Brick 1x1.325
+    400054: Round Brick 1x1.326
+    400056: Round Brick 1x1.327
+    400058: Round Brick 1x1.328
+    400060: Round Brick 1x1.329
+    400062: Round Brick 1x1.330
+    400064: Round Brick 1x1.331
+    400066: Round Brick 1x1.332
+    400068: Round Brick 1x1.333
+    400070: Round Brick 1x1.334
+    2100000: Material
+    2300000: Round Brick 1x1.300
+    2300002: Round Brick 1x1.301
+    2300004: Round Brick 1x1.302
+    2300006: Round Brick 1x1.303
+    2300008: Round Brick 1x1.304
+    2300010: Round Brick 1x1.305
+    2300012: Round Brick 1x1.306
+    2300014: Round Brick 1x1.307
+    2300016: Round Brick 1x1.308
+    2300018: Round Brick 1x1.309
+    2300020: Round Brick 1x1.310
+    2300022: Round Brick 1x1.311
+    2300024: Round Brick 1x1.312
+    2300026: Round Brick 1x1.313
+    2300028: Round Brick 1x1.314
+    2300030: Round Brick 1x1.315
+    2300032: Round Brick 1x1.316
+    2300034: Round Brick 1x1.317
+    2300036: Round Brick 1x1.318
+    2300038: Round Brick 1x1.319
+    2300040: Round Brick 1x1.320
+    2300042: Round Brick 1x1.321
+    2300044: Round Brick 1x1.322
+    2300046: Round Brick 1x1.323
+    2300048: Round Brick 1x1.324
+    2300050: Round Brick 1x1.325
+    2300052: Round Brick 1x1.326
+    2300054: Round Brick 1x1.327
+    2300056: Round Brick 1x1.328
+    2300058: Round Brick 1x1.329
+    2300060: Round Brick 1x1.330
+    2300062: Round Brick 1x1.331
+    2300064: Round Brick 1x1.332
+    2300066: Round Brick 1x1.333
+    2300068: Round Brick 1x1.334
+    3300000: Round Brick 1x1.300
+    3300002: Round Brick 1x1.301
+    3300004: Round Brick 1x1.302
+    3300006: Round Brick 1x1.303
+    3300008: Round Brick 1x1.304
+    3300010: Round Brick 1x1.305
+    3300012: Round Brick 1x1.306
+    3300014: Round Brick 1x1.307
+    3300016: Round Brick 1x1.308
+    3300018: Round Brick 1x1.309
+    3300020: Round Brick 1x1.310
+    3300022: Round Brick 1x1.311
+    3300024: Round Brick 1x1.312
+    3300026: Round Brick 1x1.313
+    3300028: Round Brick 1x1.314
+    3300030: Round Brick 1x1.315
+    3300032: Round Brick 1x1.316
+    3300034: Round Brick 1x1.317
+    3300036: Round Brick 1x1.318
+    3300038: Round Brick 1x1.319
+    3300040: Round Brick 1x1.320
+    3300042: Round Brick 1x1.321
+    3300044: Round Brick 1x1.322
+    3300046: Round Brick 1x1.323
+    3300048: Round Brick 1x1.324
+    3300050: Round Brick 1x1.325
+    3300052: Round Brick 1x1.326
+    3300054: Round Brick 1x1.327
+    3300056: Round Brick 1x1.328
+    3300058: Round Brick 1x1.329
+    3300060: Round Brick 1x1.330
+    3300062: Round Brick 1x1.331
+    3300064: Round Brick 1x1.332
+    3300066: Round Brick 1x1.333
+    3300068: Round Brick 1x1.334
+    4300000: Round Brick 1x1.334
+    4300002: Round Brick 1x1.333
+    4300004: Round Brick 1x1.332
+    4300006: Round Brick 1x1.331
+    4300008: Round Brick 1x1.330
+    4300010: Round Brick 1x1.329
+    4300012: Round Brick 1x1.328
+    4300014: Round Brick 1x1.327
+    4300016: Round Brick 1x1.326
+    4300018: Round Brick 1x1.325
+    4300020: Round Brick 1x1.324
+    4300022: Round Brick 1x1.323
+    4300024: Round Brick 1x1.322
+    4300026: Round Brick 1x1.321
+    4300028: Round Brick 1x1.320
+    4300030: Round Brick 1x1.319
+    4300032: Round Brick 1x1.318
+    4300034: Round Brick 1x1.317
+    4300036: Round Brick 1x1.316
+    4300038: Round Brick 1x1.315
+    4300040: Round Brick 1x1.314
+    4300042: Round Brick 1x1.313
+    4300044: Round Brick 1x1.312
+    4300046: Round Brick 1x1.311
+    4300048: Round Brick 1x1.310
+    4300050: Round Brick 1x1.309
+    4300052: Round Brick 1x1.308
+    4300054: Round Brick 1x1.307
+    4300056: Round Brick 1x1.306
+    4300058: Round Brick 1x1.305
+    4300060: Round Brick 1x1.304
+    4300062: Round Brick 1x1.303
+    4300064: Round Brick 1x1.302
+    4300066: Round Brick 1x1.301
+    4300068: Round Brick 1x1.300
+  externalObjects: {}
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    preserveHierarchy: 0
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    serializedVersion: 2
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 0
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

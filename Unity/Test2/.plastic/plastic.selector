@@ -1,0 +1,4 @@
+repository "Test2@Shrota@cloud"
+  path "/"
+    br "/main"
+    co "/main"
